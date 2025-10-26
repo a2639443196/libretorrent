@@ -30,6 +30,17 @@
             android:padding="12dp"
             app:icon="@drawable/pause_button_selector" />
 
+        <Button
+            android:id="@+id/stream_button"
+            style="?attr/materialIconButtonFilledTonalStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginEnd="12dp"
+            android:contentDescription="@string/play_torrent"
+            android:padding="12dp"
+            app:icon="@drawable/ic_play_arrow_24px" />
+
         <LinearLayout
             android:id="@+id/info"
             android:layout_width="match_parent"

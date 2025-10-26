@@ -40,6 +40,8 @@ import org.proninyaroslav.libretorrent.core.model.TorrentInfoProvider;
 import org.proninyaroslav.libretorrent.core.model.data.TorrentInfo;
 import org.proninyaroslav.libretorrent.core.model.data.TorrentListState;
 import org.proninyaroslav.libretorrent.core.model.data.entity.TagInfo;
+import org.proninyaroslav.libretorrent.core.model.stream.TorrentStreamServer;
+import org.proninyaroslav.libretorrent.core.settings.SettingsRepository;
 import org.proninyaroslav.libretorrent.core.sorting.TorrentSorting;
 import org.proninyaroslav.libretorrent.core.sorting.TorrentSortingComparator;
 import org.proninyaroslav.libretorrent.core.storage.TagRepository;
@@ -76,6 +78,7 @@ public class HomeViewModel extends AndroidViewModel {
     private final PublishSubject<Boolean> forceSortAndFilter = PublishSubject.create();
     private final PublishSubject<Boolean> forceSearch = PublishSubject.create();
     private final TagRepository tagRepo;
+    private final SettingsRepository pref;
     private final Moshi moshiDrawer = new Moshi.Builder()
             .add(PolymorphicJsonAdapterFactory.of(DrawerTagFilter.class, "type")
                     .withSubtype(DrawerTagFilter.NoTags.class, "no_tags")
@@ -99,6 +102,7 @@ public class HomeViewModel extends AndroidViewModel {
         stateProvider = TorrentInfoProvider.getInstance(application);
         engine = TorrentEngine.getInstance(application);
         tagRepo = RepositoryHelper.getTagRepository(application);
+        pref = RepositoryHelper.getSettingsRepository(application);
     }
 
     public Flowable<TorrentListState> observeAllTorrentsInfo() {
@@ -197,6 +201,18 @@ public class HomeViewModel extends AndroidViewModel {
 
     public void deleteTorrents(@NonNull List<String> ids, boolean withFiles) {
         engine.deleteTorrents(ids, withFiles);
+    }
+
+    public boolean isStreamingEnabled() {
+        return pref.enableStreaming();
+    }
+
+    @NonNull
+    public String getStreamUrl(@NonNull String torrentId, int fileIndex) {
+        String hostname = pref.streamingHostname();
+        int port = pref.streamingPort();
+
+        return TorrentStreamServer.makeStreamUrl(hostname, port, torrentId, fileIndex);
     }
 
     public void forceRecheckTorrents(@NonNull List<String> ids) {

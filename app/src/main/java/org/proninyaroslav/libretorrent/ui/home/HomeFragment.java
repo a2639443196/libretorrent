@@ -20,9 +20,12 @@
 package org.proninyaroslav.libretorrent.ui.home;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.InsetDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.text.Editable;
@@ -68,6 +71,7 @@ import org.proninyaroslav.libretorrent.MainActivity;
 import org.proninyaroslav.libretorrent.R;
 import org.proninyaroslav.libretorrent.core.filter.TorrentFilterCollection;
 import org.proninyaroslav.libretorrent.core.model.TorrentInfoProvider;
+import org.proninyaroslav.libretorrent.core.model.data.Priority;
 import org.proninyaroslav.libretorrent.core.model.data.SessionStats;
 import org.proninyaroslav.libretorrent.core.model.data.TorrentInfo;
 import org.proninyaroslav.libretorrent.core.model.data.TorrentListState;
@@ -1158,6 +1162,11 @@ public class HomeFragment extends AbstractListDetailFragment {
         public void onItemPauseClicked(@NonNull TorrentListItem item) {
             viewModel.pauseResumeTorrent(item.torrentId);
         }
+
+        @Override
+        public void onItemStreamClicked(@NonNull TorrentListItem item) {
+            startTorrentStreaming(item);
+        }
     };
 
     private void openTorrentDetails(String torrentId) {
@@ -1176,6 +1185,58 @@ public class HomeFragment extends AbstractListDetailFragment {
         slidingPaneLayout.open();
 
         binding.searchView.handleBackInvoked();
+    }
+
+    private void startTorrentStreaming(@NonNull TorrentListItem item) {
+        if (!viewModel.isStreamingEnabled()) {
+            Snackbar.make(
+                    activity,
+                    binding.coordinatorLayout,
+                    getString(R.string.streaming_disabled_message),
+                    Snackbar.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        int fileIndex = resolveStreamFileIndex(item);
+        if (fileIndex < 0) {
+            Snackbar.make(
+                    activity,
+                    binding.coordinatorLayout,
+                    getString(R.string.streaming_metadata_unavailable_message),
+                    Snackbar.LENGTH_SHORT
+            ).show();
+            return;
+        }
+
+        Uri uri = Uri.parse(viewModel.getStreamUrl(item.torrentId, fileIndex));
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException err) {
+            Snackbar.make(
+                    activity,
+                    binding.coordinatorLayout,
+                    getString(R.string.streaming_no_handler_message),
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    private int resolveStreamFileIndex(@NonNull TorrentListItem item) {
+        if (item.filePriorities == null || item.filePriorities.length == 0) {
+            return -1;
+        }
+
+        for (int i = 0; i < item.filePriorities.length; i++) {
+            Priority priority = item.filePriorities[i];
+            if (priority != null && priority != Priority.IGNORE) {
+                return i;
+            }
+        }
+
+        return 0;
     }
 
     @SuppressLint("RestrictedApi")

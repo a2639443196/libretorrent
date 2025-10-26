@@ -138,6 +138,7 @@ public class TorrentListAdapter extends ListAdapter<TorrentListItem, TorrentList
             implements ViewHolderWithDetails {
         private final ItemTorrentListBinding binding;
         ColorStateList pauseButtonBackground;
+        ColorStateList streamButtonBackground;
         ColorStateList cardBackground;
         int progressTrackColor;
         /* For selection support */
@@ -149,6 +150,7 @@ public class TorrentListAdapter extends ListAdapter<TorrentListItem, TorrentList
 
             this.binding = binding;
             pauseButtonBackground = binding.pauseButton.getBackgroundTintList();
+            streamButtonBackground = binding.streamButton.getBackgroundTintList();
             cardBackground = binding.card.getCardBackgroundColor();
             progressTrackColor = binding.progress.getTrackColor();
         }
@@ -174,6 +176,12 @@ public class TorrentListAdapter extends ListAdapter<TorrentListItem, TorrentList
             pauseButton.setOnClickListener((v) -> {
                 if (listener != null) {
                     listener.onItemPauseClicked(item);
+                }
+            });
+
+            binding.streamButton.setOnClickListener((v) -> {
+                if (listener != null) {
+                    listener.onItemStreamClicked(item);
                 }
             });
 
@@ -248,10 +256,12 @@ public class TorrentListAdapter extends ListAdapter<TorrentListItem, TorrentList
                 binding.card.setCardBackgroundColor(MaterialColors.getColor(binding.getRoot(), R.attr.colorPrimaryContainer));
                 var colorSurface = MaterialColors.getColor(binding.getRoot(), R.attr.colorSurface);
                 binding.pauseButton.setBackgroundTintList(ColorStateList.valueOf(colorSurface));
+                binding.streamButton.setBackgroundTintList(ColorStateList.valueOf(colorSurface));
                 binding.progress.setTrackColor(colorSurface);
             } else {
                 binding.card.setCardBackgroundColor(cardBackground);
                 binding.pauseButton.setBackgroundTintList(pauseButtonBackground);
+                binding.streamButton.setBackgroundTintList(streamButtonBackground);
                 binding.progress.setTrackColor(progressTrackColor);
             }
         }
@@ -270,6 +280,8 @@ public class TorrentListAdapter extends ListAdapter<TorrentListItem, TorrentList
         void onItemClicked(@NonNull TorrentListItem item);
 
         void onItemPauseClicked(@NonNull TorrentListItem item);
+
+        void onItemStreamClicked(@NonNull TorrentListItem item);
     }
 
     public static final DiffUtil.ItemCallback<TorrentListItem> diffCallback = new DiffUtil.ItemCallback<>() {
